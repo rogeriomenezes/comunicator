@@ -4,7 +4,7 @@
   "description": "Comunicador realtime para interligações dos sistemas RM",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "node test/comunicator.js"
   },
   "repository": {
     "type": "git",
