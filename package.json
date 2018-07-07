@@ -1,0 +1,22 @@
+{
+  "name": "rogeriomenezes-comunicator",
+  "version": "1.0.0",
+  "description": "Comunicador realtime para interligações dos sistemas RM",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogeriomenezes/comunicator.git"
+  },
+  "author": "Tiago Felipe",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rogeriomenezes/comunicator/issues"
+  },
+  "homepage": "https://github.com/rogeriomenezes/comunicator#readme",
+  "dependencies": {
+    "autobahn": "^18.3.2"
+  }
+}
