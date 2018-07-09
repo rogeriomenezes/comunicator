@@ -9,9 +9,150 @@
  */
 
 const actions = {
+
+  /**
+   * Quando o sistema recebe um novo lance em um lote. Pode ser da plateia ou de um arrematante online.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    lance: {
+   *      id: {Integer}
+   *      data: {Datetime}
+   *      valor: {Decimal}
+   *      arrematante: {
+   *        id: {Integer}
+   *        apelido: {String} (e.g.: TIAGOFELIPE)
+   *        localidade: {String} (e.g.: Montes Claros - MG)
+   *      }
+   *    }
+   *  }
+   * }
+   */
   lance: (data) => {
 
+  },
+
+  /**
+   * Quando o status de um lote é alterado.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    status: {Integer}
+   *  }
+   * }
+   */
+  status: (data) => {
+
+  },
+
+  /**
+   * Quando o controlador renova o tempo.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    status: {Integer}
+   *    tempo: {Integer}
+   *  }
+   * }
+   */
+  tempo: (data) => {
+
+  },
+
+  /**
+   * Quando o pregão muda de lote.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {Object}
+   *  pregao: {Object}
+   * }
+   */
+  mudaLote: (data) => {
+
+  },
+
+  /**
+   * Quando o controlador deleta um lance.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    lance: {Integer}
+   *  }
+   * }
+   */
+  lanceDeletado: (data) => {
+
+  },
+
+  /**
+   * Quando o incremento mínimo do lote é alterado.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    incremento: {Float}
+   *  }
+   * }
+   */
+  alteracaoIncremento: (data) => {
+
+  },
+
+  /**
+   * Quando o tempo do pregão do lote é alterado.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    tempo: {Datetime}
+   *  }
+   * }
+   */
+  alteracaoTempo: (data) => {
+
+  },
+
+  /**
+   * Quando um comitente toma uma decisão de aprovar, rejeitar ou condicionar um lance em um determinado lote.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  lote: {
+   *    id: {Integer}
+   *    status: {Integer}
+   *  }
+   */
+  comitenteDecisaoStatusLote: (data) => {
+
   }
+
 };
 
 const Comunicator = (function () {
@@ -39,7 +180,7 @@ const Comunicator = (function () {
      */
     this._listeners = {};
 
-    //calls the  Comunication connect function.
+    //calls the Comunication connect function.
     this.connect();
   };
 
@@ -93,7 +234,7 @@ const Comunicator = (function () {
       event.target = this;
     }
 
-    if (!event.type) {  //falsy
+    if (!event.type) {
       throw new Error("Event object missing 'type' property.");
     }
 
