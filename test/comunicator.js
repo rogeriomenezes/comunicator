@@ -1,6 +1,7 @@
 const Comunicator = require('../')
+const WebSocket = require('ws');
 
-const SOCKET = Comunicator.connect('ws://127.0.0.1:8444')
+const SOCKET = Comunicator.connect('ws://127.0.0.1:8444', null, WebSocket)
 
 // Test invalid listener
 /*

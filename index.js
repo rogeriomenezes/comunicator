@@ -33,7 +33,8 @@ const actions = {
    * }
    */
   lance: (data) => {
-
+    console.log('Novo lance...')
+    return data;
   },
 
   /**
@@ -50,7 +51,7 @@ const actions = {
    * }
    */
   status: (data) => {
-
+    return data;
   },
 
   /**
@@ -68,7 +69,7 @@ const actions = {
    * }
    */
   tempo: (data) => {
-
+    return data;
   },
 
   /**
@@ -83,7 +84,7 @@ const actions = {
    * }
    */
   mudaLote: (data) => {
-
+    return data;
   },
 
   /**
@@ -100,7 +101,7 @@ const actions = {
    * }
    */
   lanceDeletado: (data) => {
-
+    return data;
   },
 
   /**
@@ -117,7 +118,7 @@ const actions = {
    * }
    */
   alteracaoIncremento: (data) => {
-
+    return data;
   },
 
   /**
@@ -134,7 +135,7 @@ const actions = {
    * }
    */
   alteracaoTempo: (data) => {
-
+    return data;
   },
 
   /**
@@ -150,7 +151,7 @@ const actions = {
    *  }
    */
   comitenteDecisaoStatusLote: (data) => {
-
+    return data;
   }
 
 };
@@ -218,10 +219,10 @@ const Comunicator = (function () {
 
     let com = new this._comunicator(this._uri);
 
-    com.onopen = (env) => this.fire({type: "com/connect", data: env})
-    com.onclose = (env) => this.fire({type: "com/disconnect", data: env})
+    com.onopen = (env) => this.fire({type: 'com/connect', data: env})
+    com.onclose = (env) => this.fire({type: 'com/disconnect', data: env})
     com.onmessage = (data) => this.parseMessage(data);
-    com.onerror = (env) => this.fire({type: "com/error", data: env})
+    com.onerror = (env) => this.fire({type: 'com/error', data: env})
 
   };
 
@@ -236,7 +237,7 @@ const Comunicator = (function () {
     if (typeof actions[type] === 'undefined') {
       throw new Error(`Event '${type}' is invalid. No action exists.`);
     }
-    if (typeof this._listeners[type] === "undefined") {
+    if (typeof this._listeners[type] === 'undefined') {
       this._listeners[type] = [];
     }
 
@@ -248,7 +249,7 @@ const Comunicator = (function () {
    * @param {String} event
    */
   Comunication.prototype.fire = function (event) {
-    if (typeof event === "string") {
+    if (typeof event === 'string') {
       event = {type: event};
     }
     if (!event.target) {
@@ -258,7 +259,7 @@ const Comunicator = (function () {
     console.log('Fire event ' + event.type + ' whith data: ', event.data)
 
     if (!event.type) {
-      throw new Error("Event object missing 'type' property.");
+      throw new Error('Event object missing *type* property.');
     }
 
     if (this._listeners[event.type] instanceof Array) {
@@ -307,7 +308,7 @@ const Comunicator = (function () {
       return;
     }
 
-    if (typeof event['type'] === "undefined") {
+    if (typeof event['type'] === 'undefined') {
       console.log('Invalid event, propert *type* is not defined');
       return;
     }
@@ -323,13 +324,13 @@ const Comunicator = (function () {
       return;
     }
 
-    this.fire({type: event.type, data: event.data})
+    this.fire({type: event.type, data: actions[event.type](event.data)})
 
   };
 
   return {
-    connect: function (uri) {
-      return new Comunication(uri);
+    connect: function (uri, config, driver) {
+      return new Comunication(uri, config, driver);
     }
   }
 

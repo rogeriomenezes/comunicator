@@ -32,7 +32,10 @@ var actions = {
    *  }
    * }
    */
-  lance: function lance(data) {},
+  lance: function lance(data) {
+    console.log('Novo lance...');
+    return data;
+  },
 
   /**
    * Quando o status de um lote é alterado.
@@ -47,7 +50,9 @@ var actions = {
    *  }
    * }
    */
-  status: function status(data) {},
+  status: function status(data) {
+    return data;
+  },
 
   /**
    * Quando o controlador renova o tempo.
@@ -63,7 +68,9 @@ var actions = {
    *  }
    * }
    */
-  tempo: function tempo(data) {},
+  tempo: function tempo(data) {
+    return data;
+  },
 
   /**
    * Quando o pregão muda de lote.
@@ -76,7 +83,9 @@ var actions = {
    *  pregao: {Object}
    * }
    */
-  mudaLote: function mudaLote(data) {},
+  mudaLote: function mudaLote(data) {
+    return data;
+  },
 
   /**
    * Quando o controlador deleta um lance.
@@ -91,7 +100,9 @@ var actions = {
    *  }
    * }
    */
-  lanceDeletado: function lanceDeletado(data) {},
+  lanceDeletado: function lanceDeletado(data) {
+    return data;
+  },
 
   /**
    * Quando o incremento mínimo do lote é alterado.
@@ -106,7 +117,9 @@ var actions = {
    *  }
    * }
    */
-  alteracaoIncremento: function alteracaoIncremento(data) {},
+  alteracaoIncremento: function alteracaoIncremento(data) {
+    return data;
+  },
 
   /**
    * Quando o tempo do pregão do lote é alterado.
@@ -121,7 +134,9 @@ var actions = {
    *  }
    * }
    */
-  alteracaoTempo: function alteracaoTempo(data) {},
+  alteracaoTempo: function alteracaoTempo(data) {
+    return data;
+  },
 
   /**
    * Quando um comitente toma uma decisão de aprovar, rejeitar ou condicionar um lance em um determinado lote.
@@ -135,7 +150,9 @@ var actions = {
    *    status: {Integer}
    *  }
    */
-  comitenteDecisaoStatusLote: function comitenteDecisaoStatusLote(data) {}
+  comitenteDecisaoStatusLote: function comitenteDecisaoStatusLote(data) {
+    return data;
+  }
 
 };
 
@@ -204,16 +221,16 @@ var Comunicator = function () {
     var com = new this._comunicator(this._uri);
 
     com.onopen = function (env) {
-      return _this.fire({ type: "com/connect", data: env });
+      return _this.fire({ type: 'com/connect', data: env });
     };
     com.onclose = function (env) {
-      return _this.fire({ type: "com/disconnect", data: env });
+      return _this.fire({ type: 'com/disconnect', data: env });
     };
     com.onmessage = function (data) {
       return _this.parseMessage(data);
     };
     com.onerror = function (env) {
-      return _this.fire({ type: "com/error", data: env });
+      return _this.fire({ type: 'com/error', data: env });
     };
   };
 
@@ -228,7 +245,7 @@ var Comunicator = function () {
     if (typeof actions[type] === 'undefined') {
       throw new Error('Event \'' + type + '\' is invalid. No action exists.');
     }
-    if (typeof this._listeners[type] === "undefined") {
+    if (typeof this._listeners[type] === 'undefined') {
       this._listeners[type] = [];
     }
 
@@ -240,7 +257,7 @@ var Comunicator = function () {
    * @param {String} event
    */
   Comunication.prototype.fire = function (event) {
-    if (typeof event === "string") {
+    if (typeof event === 'string') {
       event = { type: event };
     }
     if (!event.target) {
@@ -250,7 +267,7 @@ var Comunicator = function () {
     console.log('Fire event ' + event.type + ' whith data: ', event.data);
 
     if (!event.type) {
-      throw new Error("Event object missing 'type' property.");
+      throw new Error('Event object missing *type* property.');
     }
 
     if (this._listeners[event.type] instanceof Array) {
@@ -299,7 +316,7 @@ var Comunicator = function () {
       return;
     }
 
-    if (typeof event['type'] === "undefined") {
+    if (typeof event['type'] === 'undefined') {
       console.log('Invalid event, propert *type* is not defined');
       return;
     }
@@ -315,12 +332,12 @@ var Comunicator = function () {
       return;
     }
 
-    this.fire({ type: event.type, data: event.data });
+    this.fire({ type: event.type, data: actions[event.type](event.data) });
   };
 
   return {
-    connect: function connect(uri) {
-      return new Comunication(uri);
+    connect: function connect(uri, config, driver) {
+      return new Comunication(uri, config, driver);
     }
   };
 }();
