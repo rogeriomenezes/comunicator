@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * Comunicador v1.0.0
  * Responsável pela comunicação realtime entre os sistemas de leilão
@@ -143,7 +141,7 @@ var actions = {
 
 var Comunicator = function () {
 
-  var Comunication = function Comunication(uri, config) {
+  var Comunication = function Comunication(uri, config, ComunicatorInterface) {
 
     /**
      * Holds the uri to connect to
@@ -160,6 +158,24 @@ var Comunicator = function () {
     this._session = false;
 
     /**
+     * Inform if client has support to Comunicator techonology
+     * @type boolean
+     */
+    this._hasSupport = false;
+
+    /**
+     * Class for Comunication provider
+     */
+    if (typeof ComunicatorInterface !== 'undefined') {
+      this._comunicator = ComunicatorInterface;
+      this._hasSupport = true;
+    } else {
+      if (window.WebSocket) {
+        this._comunicator = WebSocket;
+        this._hasSupport = true;
+      }
+    }
+    /**
      * Hold event callbacks
      * @type {Object}
      * @private
@@ -170,35 +186,35 @@ var Comunicator = function () {
     this.connect();
   };
 
+  Comunication.prototype.hasSupport = function () {
+    return this._hasSupport;
+  };
+
   Comunication.prototype.connect = function () {
+    var _this = this;
 
-    console.log("Connecting to " + this._uri);
+    if (!this._hasSupport) {
+      //throw new Error('Browser no support realtime comunication provider');
+      console.log('Browser no support realtime comunication provider');
+      return;
+    }
 
-    var websocket = new WebSocket(this._uri);
-    websocket.onopen = function (evt) {
-      console.log(evt);
-    };
-    websocket.onclose = function (evt) {
-      console.log(evt);
-    };
-    websocket.onmessage = function (evt) {
-      console.log(evt);
-    };
-    websocket.onerror = function (evt) {
-      console.log(evt);
-    };
+    console.log('Connecting to ' + this._uri);
 
-    /*ab.connect(this._uri,
-        //Function on connect
-      function (session) {
-        this.fire({type: "socket/connect", data: session});
-      },
-        //Function on disconnect / error
-      function (code, reason) {
-        this._session = false;
-          this.fire({type: "socket/disconnect", data: {code: code, reason: reason}});
-      }
-    );*/
+    var com = new this._comunicator(this._uri);
+
+    com.onopen = function (env) {
+      return _this.fire({ type: "com/connect", data: env });
+    };
+    com.onclose = function (env) {
+      return _this.fire({ type: "com/disconnect", data: env });
+    };
+    com.onmessage = function (data) {
+      return _this.parseMessage(data);
+    };
+    com.onerror = function (env) {
+      return _this.fire({ type: "com/error", data: env });
+    };
   };
 
   /**
@@ -210,7 +226,7 @@ var Comunicator = function () {
   Comunication.prototype.on = function (type, listener) {
     // Check if listener is valid on actions list
     if (typeof actions[type] === 'undefined') {
-      throw new Error("Event '" + type + "' is invalid. No action exists.");
+      throw new Error('Event \'' + type + '\' is invalid. No action exists.');
     }
     if (typeof this._listeners[type] === "undefined") {
       this._listeners[type] = [];
@@ -230,6 +246,8 @@ var Comunicator = function () {
     if (!event.target) {
       event.target = this;
     }
+
+    console.log('Fire event ' + event.type + ' whith data: ', event.data);
 
     if (!event.type) {
       throw new Error("Event object missing 'type' property.");
@@ -261,6 +279,45 @@ var Comunicator = function () {
     }
   };
 
+  /**
+   * Parse an message and process event, if valid
+   *
+   * @param Mixed data
+   */
+  Comunication.prototype.parseMessage = function (_event) {
+    console.log('Message received: ', _event);
+    if (typeof _event['data'] === 'undefined') {
+      console.log('Event without data');
+      return;
+    }
+
+    var event = void 0;
+    try {
+      event = JSON.parse(_event.data);
+    } catch (e) {
+      console.log('Invalid message, ignoring comunication. Reason: Message must be a valid JSON');
+      return;
+    }
+
+    if (typeof event['type'] === "undefined") {
+      console.log('Invalid event, propert *type* is not defined');
+      return;
+    }
+
+    // Verify if is an valid event
+    if (typeof actions[event.type] === 'undefined') {
+      console.log('Event *' + event.type + '* not found');
+      return;
+    }
+
+    if (typeof event['data'] === 'undefined') {
+      console.log('Event without data');
+      return;
+    }
+
+    this.fire({ type: event.type, data: event.data });
+  };
+
   return {
     connect: function connect(uri) {
       return new Comunication(uri);
@@ -268,4 +325,6 @@ var Comunicator = function () {
   };
 }();
 
-module.exports = Comunicator;
+if (typeof module !== 'undefined') {
+  module.exports = Comunicator;
+}

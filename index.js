@@ -157,7 +157,7 @@ const actions = {
 
 const Comunicator = (function () {
 
-  const Comunication = function (uri, config) {
+  const Comunication = function (uri, config, ComunicatorInterface) {
 
     /**
      * Holds the uri to connect to
@@ -174,6 +174,24 @@ const Comunicator = (function () {
     this._session = false;
 
     /**
+     * Inform if client has support to Comunicator techonology
+     * @type boolean
+     */
+    this._hasSupport = false;
+
+    /**
+     * Class for Comunication provider
+     */
+    if (typeof ComunicatorInterface !== 'undefined') {
+      this._comunicator = ComunicatorInterface;
+      this._hasSupport = true;
+    } else {
+      if (window.WebSocket) {
+        this._comunicator = WebSocket;
+        this._hasSupport = true;
+      }
+    }
+    /**
      * Hold event callbacks
      * @type {Object}
      * @private
@@ -184,32 +202,27 @@ const Comunicator = (function () {
     this.connect();
   };
 
+  Comunication.prototype.hasSupport = function () {
+    return this._hasSupport;
+  }
+
   Comunication.prototype.connect = function () {
+
+    if (!this._hasSupport) {
+      //throw new Error('Browser no support realtime comunication provider');
+      console.log('Browser no support realtime comunication provider');
+      return;
+    }
 
     console.log(`Connecting to ${this._uri}`)
 
-    let websocket = new WebSocket(this._uri);
-    websocket.onopen = function(evt) {
-      console.log(evt)
-    };
-    websocket.onclose = function(evt) { console.log(evt) };
-    websocket.onmessage = function(evt) { console.log(evt) };
-    websocket.onerror = function(evt) { console.log(evt) };
+    let com = new this._comunicator(this._uri);
 
-    /*ab.connect(this._uri,
+    com.onopen = (env) => this.fire({type: "com/connect", data: env})
+    com.onclose = (env) => this.fire({type: "com/disconnect", data: env})
+    com.onmessage = (data) => this.parseMessage(data);
+    com.onerror = (env) => this.fire({type: "com/error", data: env})
 
-      //Function on connect
-      function (session) {
-        this.fire({type: "socket/connect", data: session});
-      },
-
-      //Function on disconnect / error
-      function (code, reason) {
-        this._session = false;
-
-        this.fire({type: "socket/disconnect", data: {code: code, reason: reason}});
-      }
-    );*/
   };
 
   /**
@@ -242,6 +255,8 @@ const Comunicator = (function () {
       event.target = this;
     }
 
+    console.log('Fire event ' + event.type + ' whith data: ', event.data)
+
     if (!event.type) {
       throw new Error("Event object missing 'type' property.");
     }
@@ -272,6 +287,46 @@ const Comunicator = (function () {
     }
   };
 
+  /**
+   * Parse an message and process event, if valid
+   *
+   * @param Mixed data
+   */
+  Comunication.prototype.parseMessage = function (_event) {
+    console.log('Message received: ', _event)
+    if (typeof _event['data'] === 'undefined') {
+      console.log('Event without data');
+      return;
+    }
+
+    let event;
+    try {
+      event = JSON.parse(_event.data)
+    } catch (e) {
+      console.log('Invalid message, ignoring comunication. Reason: Message must be a valid JSON');
+      return;
+    }
+
+    if (typeof event['type'] === "undefined") {
+      console.log('Invalid event, propert *type* is not defined');
+      return;
+    }
+
+    // Verify if is an valid event
+    if (typeof actions[event.type] === 'undefined') {
+      console.log(`Event *${event.type}* not found`);
+      return;
+    }
+
+    if (typeof event['data'] === 'undefined') {
+      console.log('Event without data');
+      return;
+    }
+
+    this.fire({type: event.type, data: event.data})
+
+  };
+
   return {
     connect: function (uri) {
       return new Comunication(uri);
@@ -280,4 +335,6 @@ const Comunicator = (function () {
 
 })();
 
-module.exports = Comunicator;
+if (typeof module !== 'undefined') {
+  module.exports = Comunicator;
+}
