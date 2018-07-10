@@ -17,9 +17,7 @@
     "url": "https://github.com/rogeriomenezes/comunicator/issues"
   },
   "homepage": "https://github.com/rogeriomenezes/comunicator#readme",
-  "dependencies": {
-    "autobahn": "^18.3.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-add-module-exports": "^0.3.1",
