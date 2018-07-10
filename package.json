@@ -4,7 +4,8 @@
   "description": "Comunicador realtime para interligações dos sistemas RM",
   "main": "index.js",
   "scripts": {
-    "test": "node test/comunicator.js"
+    "test": "node test/comunicator.js",
+    "build": "babel ./index.js -d dist"
   },
   "repository": {
     "type": "git",
@@ -18,5 +19,10 @@
   "homepage": "https://github.com/rogeriomenezes/comunicator#readme",
   "dependencies": {
     "autobahn": "^18.3.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015": "^6.24.1"
   }
 }

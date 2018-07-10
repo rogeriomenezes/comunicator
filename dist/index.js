@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Comunicador v1.0.0
  * Responsável pela comunicação realtime entre os sistemas de leilão
@@ -8,7 +10,7 @@
  * Atualmente, esta aplicação depende de uma conexão websocket
  */
 
-const actions = {
+var actions = {
 
   /**
    * Quando o sistema recebe um novo lance em um lote. Pode ser da plateia ou de um arrematante online.
@@ -32,9 +34,7 @@ const actions = {
    *  }
    * }
    */
-  lance: (data) => {
-
-  },
+  lance: function lance(data) {},
 
   /**
    * Quando o status de um lote é alterado.
@@ -49,9 +49,7 @@ const actions = {
    *  }
    * }
    */
-  status: (data) => {
-
-  },
+  status: function status(data) {},
 
   /**
    * Quando o controlador renova o tempo.
@@ -67,9 +65,7 @@ const actions = {
    *  }
    * }
    */
-  tempo: (data) => {
-
-  },
+  tempo: function tempo(data) {},
 
   /**
    * Quando o pregão muda de lote.
@@ -82,9 +78,7 @@ const actions = {
    *  pregao: {Object}
    * }
    */
-  mudaLote: (data) => {
-
-  },
+  mudaLote: function mudaLote(data) {},
 
   /**
    * Quando o controlador deleta um lance.
@@ -99,9 +93,7 @@ const actions = {
    *  }
    * }
    */
-  lanceDeletado: (data) => {
-
-  },
+  lanceDeletado: function lanceDeletado(data) {},
 
   /**
    * Quando o incremento mínimo do lote é alterado.
@@ -116,9 +108,7 @@ const actions = {
    *  }
    * }
    */
-  alteracaoIncremento: (data) => {
-
-  },
+  alteracaoIncremento: function alteracaoIncremento(data) {},
 
   /**
    * Quando o tempo do pregão do lote é alterado.
@@ -133,9 +123,7 @@ const actions = {
    *  }
    * }
    */
-  alteracaoTempo: (data) => {
-
-  },
+  alteracaoTempo: function alteracaoTempo(data) {},
 
   /**
    * Quando um comitente toma uma decisão de aprovar, rejeitar ou condicionar um lance em um determinado lote.
@@ -149,15 +137,13 @@ const actions = {
    *    status: {Integer}
    *  }
    */
-  comitenteDecisaoStatusLote: (data) => {
-
-  }
+  comitenteDecisaoStatusLote: function comitenteDecisaoStatusLote(data) {}
 
 };
 
-const Comunicator = (function () {
+var Comunicator = function () {
 
-  const Comunication = function (uri, config) {
+  var Comunication = function Comunication(uri, config) {
 
     /**
      * Holds the uri to connect to
@@ -186,28 +172,31 @@ const Comunicator = (function () {
 
   Comunication.prototype.connect = function () {
 
-    console.log(`Connecting to ${this._uri}`)
+    console.log("Connecting to " + this._uri);
 
-    let websocket = new WebSocket(this._uri);
-    websocket.onopen = function(evt) {
-      console.log(evt)
+    var websocket = new WebSocket(this._uri);
+    websocket.onopen = function (evt) {
+      console.log(evt);
     };
-    websocket.onclose = function(evt) { console.log(evt) };
-    websocket.onmessage = function(evt) { console.log(evt) };
-    websocket.onerror = function(evt) { console.log(evt) };
+    websocket.onclose = function (evt) {
+      console.log(evt);
+    };
+    websocket.onmessage = function (evt) {
+      console.log(evt);
+    };
+    websocket.onerror = function (evt) {
+      console.log(evt);
+    };
 
     /*ab.connect(this._uri,
-
-      //Function on connect
+        //Function on connect
       function (session) {
         this.fire({type: "socket/connect", data: session});
       },
-
-      //Function on disconnect / error
+        //Function on disconnect / error
       function (code, reason) {
         this._session = false;
-
-        this.fire({type: "socket/disconnect", data: {code: code, reason: reason}});
+          this.fire({type: "socket/disconnect", data: {code: code, reason: reason}});
       }
     );*/
   };
@@ -221,7 +210,7 @@ const Comunicator = (function () {
   Comunication.prototype.on = function (type, listener) {
     // Check if listener is valid on actions list
     if (typeof actions[type] === 'undefined') {
-      throw new Error(`Event '${type}' is invalid. No action exists.`);
+      throw new Error("Event '" + type + "' is invalid. No action exists.");
     }
     if (typeof this._listeners[type] === "undefined") {
       this._listeners[type] = [];
@@ -236,7 +225,7 @@ const Comunicator = (function () {
    */
   Comunication.prototype.fire = function (event) {
     if (typeof event === "string") {
-      event = {type: event};
+      event = { type: event };
     }
     if (!event.target) {
       event.target = this;
@@ -247,8 +236,8 @@ const Comunicator = (function () {
     }
 
     if (this._listeners[event.type] instanceof Array) {
-      let listeners = this._listeners[event.type];
-      for (let i = 0, len = listeners.length; i < len; i++) {
+      var listeners = this._listeners[event.type];
+      for (var i = 0, len = listeners.length; i < len; i++) {
         listeners[i].call(this, event.data);
       }
     }
@@ -262,8 +251,8 @@ const Comunicator = (function () {
    */
   Comunication.prototype.off = function (type, listener) {
     if (this._listeners[type] instanceof Array) {
-      let listeners = this._listeners[type];
-      for (let i = 0, len = listeners.length; i < len; i++) {
+      var listeners = this._listeners[type];
+      for (var i = 0, len = listeners.length; i < len; i++) {
         if (listeners[i] === listener) {
           listeners.splice(i, 1);
           break;
@@ -273,11 +262,10 @@ const Comunicator = (function () {
   };
 
   return {
-    connect: function (uri) {
+    connect: function connect(uri) {
       return new Comunication(uri);
     }
-  }
-
-})();
+  };
+}();
 
 module.exports = Comunicator;
