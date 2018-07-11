@@ -247,7 +247,7 @@ const Comunicator = (function () {
         this._attempts = this._attempts + 1;
         this.connect();
 
-      }, 5000)
+      }, 10000) // 10 seconds
     });
 
     //calls the Comunication connect function.
