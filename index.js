@@ -55,6 +55,20 @@ const actions = {
   },
 
   /**
+   * Quando o status de um leilão é alterado.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  status: {Integer}
+   * }
+   */
+  statusLeilao: (data) => {
+    return data;
+  },
+
+  /**
    * Quando o controlador renova o tempo.
    * @param data
    * @return {Object|null}
