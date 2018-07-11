@@ -187,11 +187,11 @@ var Comunicator = function () {
     this._uri = uri;
 
     /**
-     * Hold autobahn session reference
+     * If Comunicator driver is connected
      * @type {String|Array|Object}
      * @private
      */
-    this._session = false;
+    this._isConnected = false;
 
     /**
      * Inform if client has support to Comunicator techonology
@@ -249,7 +249,7 @@ var Comunicator = function () {
 
         _this._attempts = _this._attempts + 1;
         _this.connect();
-      }, 5000);
+      }, 10000); // 10 seconds
     });
 
     //calls the Comunication connect function.
@@ -280,10 +280,12 @@ var Comunicator = function () {
     }
 
     com.onopen = function (env) {
-      return _this2.fire({ type: 'com/connect', data: env });
+      _this2.fire({ type: 'com/connect', data: env });
+      _this2._isConnected = true;
     };
     com.onclose = function (env) {
-      return _this2.fire({ type: 'com/disconnect', data: env });
+      _this2.fire({ type: 'com/disconnect', data: env });
+      _this2._isConnected = false;
     };
     com.onmessage = function (data) {
       return _this2.parseMessage(data);
@@ -291,6 +293,15 @@ var Comunicator = function () {
     com.onerror = function (env) {
       return _this2.fire({ type: 'com/error', data: env });
     };
+  };
+
+  /**
+   * Check if driver is connected
+   *
+   * @return boolean
+   */
+  Comunication.prototype.isConnected = function () {
+    return this._isConnected;
   };
 
   /**
