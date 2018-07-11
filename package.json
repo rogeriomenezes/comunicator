@@ -2,7 +2,7 @@
   "name": "rogeriomenezes-comunicator",
   "version": "1.0.0",
   "description": "Comunicador realtime para interligações dos sistemas RM",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "node test/comunicator.js",
     "build": "babel ./index.js -d dist"
