@@ -1,3 +1,5 @@
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 /**
  * Comunicador v1.0.0
  * Responsável pela comunicação realtime entre os sistemas de leilão
@@ -26,14 +28,19 @@ var actions = {
    *      arrematante: {
    *        id: {Integer}
    *        apelido: {String} (e.g.: TIAGOFELIPE)
-   *        localidade: {String} (e.g.: Montes Claros - MG)
+   *        pessoa: {
+   *          id: {Integer}
+   *          essencial: {
+   *            cidade: {String}
+   *            uf: {String}
+   *          }
+   *        }
    *      }
    *    }
    *  }
    * }
    */
   lance: function lance(data) {
-    console.log('Novo lance...');
     return data;
   },
 
@@ -51,6 +58,20 @@ var actions = {
    * }
    */
   status: function status(data) {
+    return data;
+  },
+
+  /**
+   * Quando o status de um leilão é alterado.
+   * @param data
+   * @return {Object|null}
+   * Sample:
+   * {
+   *  leilao: {Integer}
+   *  status: {Integer}
+   * }
+   */
+  statusLeilao: function statusLeilao(data) {
     return data;
   },
 
@@ -122,16 +143,13 @@ var actions = {
   },
 
   /**
-   * Quando o tempo do pregão do lote é alterado.
+   * Quando o tempo do pregão do leilão é alterado.
    * @param data
    * @return {Object|null}
    * Sample:
    * {
    *  leilao: {Integer}
-   *  lote: {
-   *    id: {Integer}
-   *    tempo: {Datetime}
-   *  }
+   *  tempo: {Integer}
    * }
    */
   alteracaoTempo: function alteracaoTempo(data) {
@@ -159,6 +177,7 @@ var actions = {
 var Comunicator = function () {
 
   var Comunication = function Comunication(uri, config, ComunicatorInterface) {
+    var _this = this;
 
     /**
      * Holds the uri to connect to
@@ -181,6 +200,20 @@ var Comunicator = function () {
     this._hasSupport = false;
 
     /**
+     * Attemps to reconnect case connection lost
+     * @type int
+     */
+    this._attempts = 0;
+    this._maxAttempts = null;
+    this._intervalAttempts = null;
+
+    /**
+     * Reliable events
+     * @type int
+     */
+    this._events = ["com/connect", "com/disconnect", "com/error"];
+
+    /**
      * Class for Comunication provider
      */
     if (typeof ComunicatorInterface !== 'undefined') {
@@ -199,6 +232,26 @@ var Comunicator = function () {
      */
     this._listeners = {};
 
+    this.on('com/connect', function (env) {
+      clearInterval(_this._intervalAttempts);
+      console.log('Comunicator connection re-establish');
+    });
+    this.on('com/disconnect', function (env) {
+      // let hasLimit = _maxAttempts !== null
+      clearInterval(_this._intervalAttempts);
+      _this._intervalAttempts = setInterval(function () {
+
+        if (_this._maxAttempts === null) {
+          console.log('Comunicator connection lost, attempt to reconnect: ' + _this._attempts + ' attempt');
+        } else {
+          console.log('Comunicator connection lost, attempt to reconnect: ' + _this._attempts + ' of ' + _this._maxAttempts);
+        }
+
+        _this._attempts = _this._attempts + 1;
+        _this.connect();
+      }, 5000);
+    });
+
     //calls the Comunication connect function.
     this.connect();
   };
@@ -208,7 +261,7 @@ var Comunicator = function () {
   };
 
   Comunication.prototype.connect = function () {
-    var _this = this;
+    var _this2 = this;
 
     if (!this._hasSupport) {
       //throw new Error('Browser no support realtime comunication provider');
@@ -216,21 +269,27 @@ var Comunicator = function () {
       return;
     }
 
-    console.log('Connecting to ' + this._uri);
+    console.log("Connecting to " + this._uri);
 
-    var com = new this._comunicator(this._uri);
+    var com = void 0;
+    try {
+      com = new this._comunicator(this._uri);
+    } catch (e) {
+      console.log(e.message);
+      this.fire({ type: 'com/disconnect', data: { code: 0, reason: e.message } });
+    }
 
     com.onopen = function (env) {
-      return _this.fire({ type: 'com/connect', data: env });
+      return _this2.fire({ type: 'com/connect', data: env });
     };
     com.onclose = function (env) {
-      return _this.fire({ type: 'com/disconnect', data: env });
+      return _this2.fire({ type: 'com/disconnect', data: env });
     };
     com.onmessage = function (data) {
-      return _this.parseMessage(data);
+      return _this2.parseMessage(data);
     };
     com.onerror = function (env) {
-      return _this.fire({ type: 'com/error', data: env });
+      return _this2.fire({ type: 'com/error', data: env });
     };
   };
 
@@ -242,8 +301,8 @@ var Comunicator = function () {
    */
   Comunication.prototype.on = function (type, listener) {
     // Check if listener is valid on actions list
-    if (typeof actions[type] === 'undefined') {
-      throw new Error('Event \'' + type + '\' is invalid. No action exists.');
+    if (typeof actions[type] === 'undefined' && _typeof(this._events.indexOf(type)) === -1) {
+      throw new Error("Event '" + type + "' is invalid. No action exists.");
     }
     if (typeof this._listeners[type] === 'undefined') {
       this._listeners[type] = [];
@@ -323,7 +382,7 @@ var Comunicator = function () {
 
     // Verify if is an valid event
     if (typeof actions[event.type] === 'undefined') {
-      console.log('Event *' + event.type + '* not found');
+      console.log("Event *" + event.type + "* not found");
       return;
     }
 

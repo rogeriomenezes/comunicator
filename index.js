@@ -26,14 +26,19 @@ const actions = {
    *      arrematante: {
    *        id: {Integer}
    *        apelido: {String} (e.g.: TIAGOFELIPE)
-   *        localidade: {String} (e.g.: Montes Claros - MG)
+   *        pessoa: {
+   *          id: {Integer}
+   *          essencial: {
+   *            cidade: {String}
+   *            uf: {String}
+   *          }
+   *        }
    *      }
    *    }
    *  }
    * }
    */
   lance: (data) => {
-    console.log('Novo lance...')
     return data;
   },
 
@@ -136,16 +141,13 @@ const actions = {
   },
 
   /**
-   * Quando o tempo do pregão do lote é alterado.
+   * Quando o tempo do pregão do leilão é alterado.
    * @param data
    * @return {Object|null}
    * Sample:
    * {
    *  leilao: {Integer}
-   *  lote: {
-   *    id: {Integer}
-   *    tempo: {Datetime}
-   *  }
+   *  tempo: {Integer}
    * }
    */
   alteracaoTempo: (data) => {
@@ -195,6 +197,20 @@ const Comunicator = (function () {
     this._hasSupport = false;
 
     /**
+     * Attemps to reconnect case connection lost
+     * @type int
+     */
+    this._attempts = 0;
+    this._maxAttempts = null;
+    this._intervalAttempts = null;
+
+    /**
+     * Reliable events
+     * @type int
+     */
+    this._events = ["com/connect", "com/disconnect", "com/error"];
+
+    /**
      * Class for Comunication provider
      */
     if (typeof ComunicatorInterface !== 'undefined') {
@@ -212,6 +228,27 @@ const Comunicator = (function () {
      * @private
      */
     this._listeners = {};
+
+    this.on('com/connect', (env) => {
+      clearInterval(this._intervalAttempts);
+      console.log('Comunicator connection re-establish');
+    });
+    this.on('com/disconnect', (env) => {
+      // let hasLimit = _maxAttempts !== null
+      clearInterval(this._intervalAttempts);
+      this._intervalAttempts = setInterval(() => {
+
+        if (this._maxAttempts === null) {
+          console.log('Comunicator connection lost, attempt to reconnect: ' + this._attempts + ' attempt');
+        } else {
+          console.log('Comunicator connection lost, attempt to reconnect: ' + this._attempts + ' of ' + this._maxAttempts);
+        }
+
+        this._attempts = this._attempts + 1;
+        this.connect();
+
+      }, 5000)
+    });
 
     //calls the Comunication connect function.
     this.connect();
@@ -231,7 +268,14 @@ const Comunicator = (function () {
 
     console.log(`Connecting to ${this._uri}`)
 
-    let com = new this._comunicator(this._uri);
+    let com
+    try {
+      com = new this._comunicator(this._uri);
+    }
+    catch (e) {
+      console.log(e.message);
+      this.fire({type: 'com/disconnect', data: {code: 0, reason: e.message}});
+    }
 
     com.onopen = (env) => this.fire({type: 'com/connect', data: env})
     com.onclose = (env) => this.fire({type: 'com/disconnect', data: env})
@@ -248,7 +292,7 @@ const Comunicator = (function () {
    */
   Comunication.prototype.on = function (type, listener) {
     // Check if listener is valid on actions list
-    if (typeof actions[type] === 'undefined') {
+    if (typeof actions[type] === 'undefined' && typeof this._events.indexOf(type) === -1) {
       throw new Error(`Event '${type}' is invalid. No action exists.`);
     }
     if (typeof this._listeners[type] === 'undefined') {
