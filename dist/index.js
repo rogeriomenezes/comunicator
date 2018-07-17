@@ -206,6 +206,13 @@ var Comunicator = function () {
     this._attempts = 0;
     this._maxAttempts = null;
     this._intervalAttempts = null;
+    this._closedByUser = false;
+
+    /**
+     * Session instance of connection
+     * @type object|null
+     */
+    this._session = null;
 
     /**
      * Reliable events
@@ -237,6 +244,10 @@ var Comunicator = function () {
       console.log('Comunicator connection re-establish');
     });
     this.on('com/disconnect', function (env) {
+      if (_this._closedByUser) {
+        console.log('Closed by user. No need to reconnect');
+        return;
+      }
       // let hasLimit = _maxAttempts !== null
       clearInterval(_this._intervalAttempts);
       _this._intervalAttempts = setInterval(function () {
@@ -277,7 +288,10 @@ var Comunicator = function () {
     } catch (e) {
       console.log(e.message);
       this.fire({ type: 'com/disconnect', data: { code: 0, reason: e.message } });
+      return;
     }
+
+    this._session = com;
 
     com.onopen = function (env) {
       _this2.fire({ type: 'com/connect', data: env });
@@ -299,7 +313,9 @@ var Comunicator = function () {
    * Close connection
    */
   Comunication.prototype.close = function () {
-    this._comunicator.close();
+    this._closedByUser = true;
+    this._session.close();
+    this._session = null;
   };
 
   /**

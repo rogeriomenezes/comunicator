@@ -12,3 +12,6 @@ SOCKET.on('lance2', (data) => {
 SOCKET.on('lance', (data) => {
   console.log('Action on \'lance\' whit data: ', data)
 })
+
+// Test close session
+SOCKET.close()
