@@ -296,6 +296,13 @@ var Comunicator = function () {
   };
 
   /**
+   * Close connection
+   */
+  Comunication.prototype.close = function () {
+    this._comunicator.close();
+  };
+
+  /**
    * Check if driver is connected
    *
    * @return boolean
